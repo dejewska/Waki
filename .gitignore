@@ -1,0 +1,15 @@
+
+# prywatne pliki konfiguracyjne czyli czego nie nalezy dodawac do repo
+.env
+.env.*
+!.env.example
+
+# Zaleznosci Node.js
+node_modules/
+
+# Pliki generowane podczas budowania
+dist/
+build/
+
+# Logi
+*.log
