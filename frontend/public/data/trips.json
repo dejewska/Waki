@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "destination": "Rzym, Włochy",
+    "startDate": "2026-11-10",
+    "endDate": "2026-11-15",
+    "budget": 2500,
+    "status": "Zaplanowana"
+  },
+  {
+    "id": 2,
+    "destination": "Paryż, Francja",
+    "startDate": "2026-12-05",
+    "endDate": "2026-12-09",
+    "budget": 3500,
+    "status": "Zaplanowana"
+  },
+  {
+    "id": 3,
+    "destination": "Barcelona, Hiszpania",
+    "startDate": "2026-08-12",
+    "endDate": "2026-08-19",
+    "budget": 4200,
+    "status": "Zakończona"
+  },
+  {
+    "id": 4,
+    "destination": "Praga, Czechy",
+    "startDate": "2027-03-20",
+    "endDate": "2027-03-23",
+    "budget": 1200,
+    "status": "Pomysł"
+  }
+]

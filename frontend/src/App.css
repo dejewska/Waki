@@ -1,0 +1,89 @@
+#root {
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: linear-gradient(120deg, #2563eb, #0f766e);
+  color: white;
+  text-align: center;
+  padding: 45px 20px;
+}
+
+header h1 {
+  font-size: 48px;
+  margin: 0;
+}
+
+main {
+  width: min(1100px, 92%);
+  margin: 35px auto;
+  flex: 1;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+  margin: 28px 0;
+}
+
+input, select {
+  padding: 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+input {
+  flex: 1;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 15px;
+  padding: 23px;
+  box-shadow: 0 5px 18px rgba(0,0,0,0.08);
+}
+
+.card h3 {
+  margin: 18px 0;
+}
+
+.card p {
+  color: #475569;
+}
+
+.tag {
+  display: inline-block;
+  padding: 7px 12px;
+  border-radius: 20px;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.error {
+  color: #dc2626;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
+}
+
+@media (max-width: 600px) {
+  .filters {
+    flex-direction: column;
+  }
+}
