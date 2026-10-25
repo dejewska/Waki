@@ -2,8 +2,8 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-
 const pool = require('./db');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -11,128 +11,198 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.status(200).json({
-    message: 'Waki API dziala!',
-    status: 'OK'
-  });
+  res.json({ message: 'Waki API działa' });
 });
 
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    application: 'Waki',
-    database: 'not connected'
-  });
+app.get('/api/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'ok', database: 'connected' });
+  } catch (error) {
+    console.error(error.message);
+    res.status(503).json({ status: 'error', database: 'disconnected' });
+  }
 });
 
+const allowedStatuses = ['planned', 'confirmed', 'completed'];
 
+function validateTrip(data) {
+  if (!data || typeof data !== 'object') {
+    return 'Invalid trip data';
+  }
 
-// Tymczasowa lista podrozy (do testow CRUD)
-let trips = [];
-let nextId = 1;
+  const { destination, startDate, endDate, budget, status } = data;
 
-// CREATE - dodawanie podrozy
-app.post('/api/trips', (req, res) => {
-  const { destination, startDate, endDate, budget, status } = req.body;
+  if (typeof destination !== 'string' || !destination.trim()) {
+    return 'Destination is required';
+  }
+
+  const pattern = /^\d{4}-\d{2}-\d{2}$/;
 
   if (
-    typeof destination !== 'string' ||
-    !destination.trim() ||
     typeof startDate !== 'string' ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
     typeof endDate !== 'string' ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(endDate) ||
-    endDate < startDate ||
-    typeof budget !== 'number' ||
-    !Number.isFinite(budget) ||
-    budget < 0 ||
-    !['planned', 'confirmed', 'completed'].includes(status)
+    !pattern.test(startDate) ||
+    !pattern.test(endDate)
   ) {
-    return res.status(400).json({
-      error: 'Nieprawidlowe dane podrozy'
-    });
+    return 'Dates must use YYYY-MM-DD format';
   }
 
-  const trip = {
-    id: nextId++,
-    destination,
-    startDate,
-    endDate,
-    budget,
-    status
-  };
-
-  trips.push(trip);
-  res.status(201).json(trip);
-});
-
-// READ - pobieranie wszystkich podrozy
-app.get('/api/trips', (req, res) => {
-  res.json(trips);
-});
-
-// READ - pobieranie jednej podrozy
-app.get('/api/trips/:id', (req, res) => {
-  const trip = trips.find(t => t.id === Number(req.params.id));
-
-  if (!trip) {
-    return res.status(404).json({ error: 'Podroz nie istnieje' });
-  }
-
-  res.json(trip);
-});
-
-// UPDATE - edycja podrozy
-app.put('/api/trips/:id', (req, res) => {
-  const trip = trips.find(t => t.id === Number(req.params.id));
-
-  if (!trip) {
-    return res.status(404).json({ error: 'Podroz nie istnieje' });
-  }
-
-  const updated = { ...trip, ...req.body };
+  const start = new Date(startDate);
+  const end = new Date(endDate);
 
   if (
-    typeof updated.destination !== 'string' ||
-    !updated.destination.trim() ||
-    typeof updated.startDate !== 'string' ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(updated.startDate) ||
-    typeof updated.endDate !== 'string' ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(updated.endDate) ||
-    updated.endDate < updated.startDate ||
-    typeof updated.budget !== 'number' ||
-    !Number.isFinite(updated.budget) ||
-    updated.budget < 0 ||
-    !['planned', 'confirmed', 'completed'].includes(updated.status)
+    Number.isNaN(start.getTime()) ||
+    Number.isNaN(end.getTime()) ||
+    start.toISOString().slice(0, 10) !== startDate ||
+    end.toISOString().slice(0, 10) !== endDate
   ) {
-    return res.status(400).json({
-      error: 'Nieprawidlowe dane podrozy'
-    });
+    return 'Invalid date';
   }
 
-  Object.assign(trip, {
-    destination: updated.destination,
-    startDate: updated.startDate,
-    endDate: updated.endDate,
-    budget: updated.budget,
-    status: updated.status
-  });
-
-  res.json(trip);
-});
-
-// DELETE - usuwanie podrozy
-app.delete('/api/trips/:id', (req, res) => {
-  const index = trips.findIndex(t => t.id === Number(req.params.id));
-
-  if (index === -1) {
-    return res.status(404).json({ error: 'Podroz nie istnieje' });
+  if (end < start) {
+    return 'End date cannot be before start date';
   }
 
-  trips.splice(index, 1);
-  res.json({ message: 'Podroz usunieta' });
+  if (typeof budget !== 'number' || !Number.isFinite(budget) || budget < 0) {
+    return 'Budget must be a non-negative number';
+  }
+
+  if (status !== undefined && !allowedStatuses.includes(status)) {
+    return 'Invalid status';
+  }
+
+  return null;
+}
+
+function formatTrip(row) {
+  const formatDate = value =>
+    value instanceof Date
+      ? value.toISOString().slice(0, 10)
+      : String(value).slice(0, 10);
+
+  return {
+    id: row.id,
+    destination: row.destination,
+    startDate: formatDate(row.start_date),
+    endDate: formatDate(row.end_date),
+    budget: Number(row.budget),
+    status: row.status
+  };
+}
+
+// CREATE
+app.post('/api/trips', async (req, res) => {
+  const error = validateTrip(req.body);
+  if (error) return res.status(400).json({ error });
+
+  const { destination, startDate, endDate, budget, status = 'planned' } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO trips (destination, start_date, end_date, budget, status)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [destination.trim(), startDate, endDate, budget, status]
+    );
+
+    res.status(201).json(formatTrip(result.rows[0]));
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`Waki API uruchomione na porcie ${PORT}`);
+// READ ALL
+app.get('/api/trips', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM trips ORDER BY id');
+    res.json(result.rows.map(formatTrip));
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// READ ONE
+app.get('/api/trips/:id', async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ error: 'Invalid trip ID' });
+  }
+
+  try {
+    const result = await pool.query('SELECT * FROM trips WHERE id = $1', [id]);
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    res.json(formatTrip(result.rows[0]));
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// UPDATE
+app.put('/api/trips/:id', async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ error: 'Invalid trip ID' });
+  }
+
+  const error = validateTrip(req.body);
+  if (error) return res.status(400).json({ error });
+
+  const { destination, startDate, endDate, budget, status = 'planned' } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE trips
+       SET destination = $1, start_date = $2, end_date = $3,
+           budget = $4, status = $5
+       WHERE id = $6 RETURNING *`,
+      [destination.trim(), startDate, endDate, budget, status, id]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    res.json(formatTrip(result.rows[0]));
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// DELETE
+app.delete('/api/trips/:id', async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ error: 'Invalid trip ID' });
+  }
+
+  try {
+    const result = await pool.query(
+      'DELETE FROM trips WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    res.json({ message: 'Trip deleted' });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Waki API running on port ${PORT}`);
 });
