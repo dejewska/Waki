@@ -18,12 +18,12 @@ Waki to apka służąca do planowania podróży i zarządzania listą miejsc, kt
 - Frontend - React
 - Backend: Node.js + express
 - Baza danych - PostgreSQL
-- Platforma chmurowa: ms azure
+- Platforma chmurowa: AWS
 
 ## architektura
 
 Projekt wykorzystuje architekturę trójwarstwową (3-tier), obejmującą frontend, backend oraz bazę danych
-![Diagram architektury Waki](docs/Waki_architektura.png)
+![Architektura Waki w AWS](docs/Waki_architektura_AWS.png)
 
 ## struktura repozytorium
 
