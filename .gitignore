@@ -13,3 +13,7 @@ build/
 
 # Logi
 *.log
+
+# Backend - zaleznosci i dane poufne
+backend/node_modules/
+backend/.env
