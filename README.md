@@ -1,41 +1,72 @@
 # Waki
 
-## opis projektu
+Waki to aplikacja do planowania podróży. Pozwala dodawać, przeglądać, edytować i usuwać wyjazdy wraz z kierunkiem, datami, budżetem i statusem.
 
-Waki to apka służąca do planowania podróży i zarządzania listą miejsc, które użytkownik chce zobaczyc. Aplikacja umożliwi dodawanie, przeglądanie, edytowanie i usuwanie podróży wraz z informacjami o kierunku, terminie, budżecie oraz statusie wyjazdu. Użytkownicy będą mogli również wyszukiwać i filtrować zapisane podróże 
+## Funkcjonalności
 
-## funkcjonalnosci
-
-- Rejestracja i logowanie użytkowników
-- Dodawanie, edytowanie i usuwanie podróży (CRUD)
-- Przeglądanie listy i szczegółów podróży
-- Wyszukiwanie i filtrowanie podróży
-- Określanie dat, budżetów i statusów wyjazdów
-- Walidacja danych i obsługa błędów
+- Dodawanie, przeglądanie, edycja i usuwanie podróży (CRUD)
+- Formularz z walidacją danych
+- Komunikaty ładowania, sukcesu i błędów
+- Zapisywanie danych w PostgreSQL przez REST API
 
 ## Technologie
 
-- Frontend - React
-- Backend: Node.js + express
-- Baza danych - PostgreSQL
-- Platforma chmurowa: AWS
+- Frontend: React, Vite
+- Backend: Node.js, Express
+- Baza danych: PostgreSQL
+- Chmura: AWS EC2 i AWS RDS
 
-## architektura
+## Architektura
 
-Projekt wykorzystuje architekturę trójwarstwową (3-tier), obejmującą frontend, backend oraz bazę danych
+Przeglądarka → React/Vite na EC2 → Express REST API na EC2 → PostgreSQL w prywatnej bazie AWS RDS.
+
 ![Architektura Waki w AWS](docs/Waki_architektura_AWS.png)
 
-## struktura repozytorium
+## REST API
 
-- `frontend/` – interfejs użytkownika
-- `backend/` – logika aplikacji i REST API
-- `config/` – pliki konfiguracyjne
-- `docs/` – dokumentacja i diagramy
+| Metoda | Endpoint | Opis |
+|---|---|---|
+| GET | `/api/health` | Sprawdzenie połączenia z bazą |
+| GET | `/api/trips` | Lista podróży |
+| GET | `/api/trips/:id` | Szczegóły podróży |
+| POST | `/api/trips` | Dodanie podróży |
+| PUT | `/api/trips/:id` | Edycja podróży |
+| DELETE | `/api/trips/:id` | Usunięcie podróży |
 
-## status projektu
+Pola podróży: `destination`, `startDate`, `endDate`, `budget`, `status`.
 
-Projekt jest w fazie przygotowania architektury, dokumentacji oraz struktury repozytorium. Implementacja i wdrożenie aplikacji są planowane
+Dozwolone statusy: `planned`, `confirmed`, `completed`.
 
-## organizacja pracy
+API obsługuje kody HTTP 200, 201, 400, 404, 500 i 503.
 
-Projekt jest realizowany indywidualnie a zadania są organizowane w GitHub Projects
+## Uruchomienie
+
+Wymagane: Node.js 22, npm i dostęp do PostgreSQL.
+
+1. Sklonuj repozytorium.
+2. Skonfiguruj `backend/.env` według `backend/.env.example`.
+3. Uruchom backend:
+
+   cd backend
+   npm install
+   node server.js
+
+4. W drugim terminalu uruchom frontend:
+
+   cd frontend
+   npm ci
+   npm run dev
+
+Frontend korzysta z `/api`, które Vite przekierowuje na backend na porcie 3000.
+
+## Struktura projektu
+
+- `frontend/` – interfejs React
+- `backend/` – REST API i połączenie z bazą
+- `docs/` – diagram architektury
+
+## Status projektu
+
+Operacje CRUD zostały przetestowane w przeglądarce z bazą PostgreSQL na AWS RDS. Frontend i backend zostały uruchomione testowo na instancji EC2.
+
+Projekt jest realizowany indywidualnie.
