@@ -22,3 +22,4 @@ jobs:
           cd ../frontend
           npm ci
           npm run build
+          sudo cp -r dist/. /usr/share/nginx/html/
