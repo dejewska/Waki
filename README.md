@@ -80,3 +80,13 @@ Projekt jest realizowany indywidualnie.
 | Baza danych (RDS PostgreSQL) | Port 5432 tylko z wybranych grup AWS | Brak publicznego dostępu do bazy |
 
 Ruch do strony jest zabezpieczony HTTPS. Dostęp administracyjny SSH ograniczony do wskazanych adresów IP.
+
+## Monitoring AWS CloudWatch
+
+Dashboard `Waki-Monitoring` monitoruje:
+- wykorzystanie CPU instancji EC2,
+- wykorzystanie pamięci RAM,
+- błędy HTTP 4xx,
+- czas odpowiedzi żądań.
+
+Logi backendu i Nginx są przesyłane do AWS CloudWatch Logs.
