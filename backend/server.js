@@ -14,6 +14,15 @@ app.get('/', (req, res) => {
   res.json({ message: 'Waki API działa' });
 });
 
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'UP', database: 'CONNECTED', timestamp: new Date().toISOString() });
+  } catch (error) {
+    res.status(500).json({ status: 'DOWN', database: 'DISCONNECTED', timestamp: new Date().toISOString() });
+  }
+});
+
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
