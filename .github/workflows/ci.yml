@@ -40,3 +40,15 @@ jobs:
           fetch-depth: 0
       - name: Scan secrets with Gitleaks
         uses: gitleaks/gitleaks-action@v2
+
+  vulnerability-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan vulnerabilities with Trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          exit-code: '1'
