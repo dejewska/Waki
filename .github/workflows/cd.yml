@@ -1,0 +1,35 @@
+name: CD - Deploy Waki
+
+on:
+  workflow_run:
+    workflows: ["Waki CI"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/waki.pem
+          chmod 600 ~/.ssh/waki.pem
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/waki.pem ec2-user@"$HOST" << 'EOF'
+            cd ~/Waki
+            git pull origin main
+            cd backend
+            npm ci
+            cd ../frontend
+            npm ci
+            npm run build
+          EOF
