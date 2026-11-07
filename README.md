@@ -70,3 +70,13 @@ Frontend korzysta z `/api`, które Vite przekierowuje na backend na porcie 3000.
 Operacje CRUD zostały przetestowane w przeglądarce z bazą PostgreSQL na AWS RDS. Frontend i backend zostały uruchomione testowo na instancji EC2.
 
 Projekt jest realizowany indywidualnie.
+
+## Bezpieczeństwo infrastruktury AWS
+
+| Warstwa | Dostęp | Zabezpieczenie |
+|---|---|---|
+| Web (Nginx) | HTTP 80, HTTPS 443 | Certyfikat SSL, przekierowanie na HTTPS |
+| Aplikacja (EC2) | SSH 22 tylko z wybranych IP | Brak publicznego dostępu do backendu na porcie 3000 |
+| Baza danych (RDS PostgreSQL) | Port 5432 tylko z wybranych grup AWS | Brak publicznego dostępu do bazy |
+
+Ruch do strony jest zabezpieczony HTTPS. Dostęp administracyjny SSH ograniczony do wskazanych adresów IP.
