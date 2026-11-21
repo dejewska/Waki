@@ -37,13 +37,13 @@ const allowedStatuses = ['planned', 'confirmed', 'completed'];
 
 function validateTrip(data) {
   if (!data || typeof data !== 'object') {
-    return 'Invalid trip data';
+    return 'Nieprawidłowe dane podróży';
   }
 
   const { destination, startDate, endDate, budget, status } = data;
 
   if (typeof destination !== 'string' || !destination.trim()) {
-    return 'Destination is required';
+    return 'Musisz podać cel podróży';
   }
 
   const pattern = /^\d{4}-\d{2}-\d{2}$/;
@@ -54,7 +54,7 @@ function validateTrip(data) {
     !pattern.test(startDate) ||
     !pattern.test(endDate)
   ) {
-    return 'Dates must use YYYY-MM-DD format';
+    return 'Daty muszą mieć format RRRR-MM-DD';
   }
 
   const start = new Date(startDate);
@@ -66,19 +66,19 @@ function validateTrip(data) {
     start.toISOString().slice(0, 10) !== startDate ||
     end.toISOString().slice(0, 10) !== endDate
   ) {
-    return 'Invalid date';
+    return 'Nieprawidłowa data';
   }
 
   if (end < start) {
-    return 'End date cannot be before start date';
+    return 'Data końca nie może być wcześniejsza niż data początku';
   }
 
   if (typeof budget !== 'number' || !Number.isFinite(budget) || budget < 0) {
-    return 'Budget must be a non-negative number';
+    return 'Budżet nie może być ujemny';
   }
 
   if (status !== undefined && !allowedStatuses.includes(status)) {
-    return 'Invalid status';
+    return 'Nieprawidłowy status';
   }
 
   return null;
@@ -117,7 +117,7 @@ app.post('/api/trips', async (req, res) => {
     res.status(201).json(formatTrip(result.rows[0]));
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: 'Błąd bazy danych' });
   }
 });
 
@@ -128,7 +128,7 @@ app.get('/api/trips', async (req, res) => {
     res.json(result.rows.map(formatTrip));
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: 'Błąd bazy danych' });
   }
 });
 
@@ -137,20 +137,20 @@ app.get('/api/trips/:id', async (req, res) => {
   const id = Number(req.params.id);
 
   if (!Number.isInteger(id) || id < 1) {
-    return res.status(400).json({ error: 'Invalid trip ID' });
+    return res.status(400).json({ error: 'Nieprawidłowy numer podróży' });
   }
 
   try {
     const result = await pool.query('SELECT * FROM trips WHERE id = $1', [id]);
 
     if (!result.rows.length) {
-      return res.status(404).json({ error: 'Trip not found' });
+      return res.status(404).json({ error: 'Nie znaleziono podróży' });
     }
 
     res.json(formatTrip(result.rows[0]));
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: 'Błąd bazy danych' });
   }
 });
 
@@ -159,7 +159,7 @@ app.put('/api/trips/:id', async (req, res) => {
   const id = Number(req.params.id);
 
   if (!Number.isInteger(id) || id < 1) {
-    return res.status(400).json({ error: 'Invalid trip ID' });
+    return res.status(400).json({ error: 'Nieprawidłowy numer podróży' });
   }
 
   const error = validateTrip(req.body);
@@ -177,13 +177,13 @@ app.put('/api/trips/:id', async (req, res) => {
     );
 
     if (!result.rows.length) {
-      return res.status(404).json({ error: 'Trip not found' });
+      return res.status(404).json({ error: 'Nie znaleziono podróży' });
     }
 
     res.json(formatTrip(result.rows[0]));
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: 'Błąd bazy danych' });
   }
 });
 
@@ -192,7 +192,7 @@ app.delete('/api/trips/:id', async (req, res) => {
   const id = Number(req.params.id);
 
   if (!Number.isInteger(id) || id < 1) {
-    return res.status(400).json({ error: 'Invalid trip ID' });
+    return res.status(400).json({ error: 'Nieprawidłowy numer podróży' });
   }
 
   try {
@@ -202,13 +202,13 @@ app.delete('/api/trips/:id', async (req, res) => {
     );
 
     if (!result.rows.length) {
-      return res.status(404).json({ error: 'Trip not found' });
+      return res.status(404).json({ error: 'Nie znaleziono podróży' });
     }
 
     res.json({ message: 'Trip deleted' });
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: 'Błąd bazy danych' });
   }
 });
 
