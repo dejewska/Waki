@@ -90,3 +90,23 @@ Dashboard `Waki-Monitoring` monitoruje:
 - czas odpowiedzi żądań.
 
 Logi backendu i Nginx są przesyłane do AWS CloudWatch Logs.
+
+## Uruchamianie testów
+
+### Testy REST API
+Wymagają działającego backendu i bazy danych.
+
+```bash
+API_URL=https://16.16.100.71.sslip.io node --test backend/tests/api.test.js
+```
+
+### Test Playwright
+
+```bash
+cd frontend
+npm ci
+npx playwright install chromium
+npx playwright test
+```
+
+Test Playwright uruchamia się automatycznie w GitHub Actions po wdrożeniu.
